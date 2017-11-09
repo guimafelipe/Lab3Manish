@@ -1,0 +1,73 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+Gh = np.matrix('1 0 0 0 1 1 1; 0 1 0 0 1 0 1; 0 0 1 0 1 1 0; 0 0 0 1 0 1 1')
+Hh = np.matrix('1 1 1; 1 0 1; 1 1 0; 0 1 1; 1 0 0; 0 1 0; 0 0 1')
+
+def get_error_bit(Hh,s):
+	for i in range(7):
+		if ( (s == Hh[i]).all() ):
+			return i+1;
+def construc_error(i):
+	v = np.matrix('0 0 0 0 0 0 0');
+	if(i):
+		v[0,i-1] = 1;
+	return v;
+def generate_input(L):
+	lista = []
+	for k in range(L//4):
+		input = np.random.rand(1,4);
+		for i in range(4):
+			if ( input[0,i] > 0.5):
+				input[0,i] = 1;
+			else:
+				input[0,i] = 0;
+		lista.append(input.astype(int));
+	return np.squeeze(np.asarray(lista));
+def generate_output(lista,p):
+	out = []
+	for vector in lista:
+		v = (vector*Gh)%2
+		e = generate_error(p);
+		r = v^e;
+		s = (r*Hh)%2
+		i = get_error_bit(Hh,s)
+		k = construc_error(i)
+		saida = (r^k)[0,:4]
+		out.append(np.squeeze(np.asarray(saida)));
+	return out;
+def generate_error(p):
+	error = np.random.rand(1,7);
+	for i in range(7):
+		if ( error[0,i] > p):
+			error[0,i] = 0;
+		else:
+			error[0,i] = 1;
+	return error.astype(int);
+
+
+Nmax = 10**4;
+a = generate_input(Nmax)
+#b = generate_output(a,0.15)
+#rint(a)
+#print(b)
+Pb = []
+P = []
+p = 0.5
+for j in range(1000):
+	errors = 0;
+	p = p-0.0005;
+	P.append(p);
+	b = generate_output(a,p)
+	for x,y in zip(a,b):
+		for k in range(4):
+			if(x[k] != y[k]):
+				errors +=1;
+	Pb.append(errors/Nmax);
+
+print(Pb)
+plt.plot(P,Pb)
+plt.ylabel('Pb')
+plt.xlabel('p')
+#print(P)
+plt.show()
